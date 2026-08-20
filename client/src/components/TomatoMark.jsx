@@ -1,0 +1,44 @@
+/**
+ * The Let's Ketchup tomato, redrawn as a clean inline SVG so it sits happily
+ * on cream (the supplied JPG has a baked-in black background).
+ */
+export default function TomatoMark({ size = 64, className = '', title = "Let's Ketchup" }) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      role="img"
+      aria-label={title}
+      focusable="false"
+    >
+      {/* calyx — deep green leaves + stem, drawn behind the fruit */}
+      <path d="M31 19.5C24 19.5 17 16.5 13 11.5c7-1.6 14 1.4 18.5 6.4Z" fill="#2F6B4F" />
+      <path d="M33 19.5c7 0 14-3 18-8-7-1.6-14 1.4-18.5 6.4Z" fill="#2F6B4F" />
+      <path d="M31.6 18.8C27 15.3 24 10 23.5 4.4c4.5 3 7.6 8 8.6 13Z" fill="#3A7D5D" />
+      <path d="M32.4 18.8C37 15.3 40 10 40.5 4.4c-4.5 3-7.6 8-8.6 13Z" fill="#3A7D5D" />
+      <path
+        d="M32 18.5C31.6 13 32.2 8.4 34.4 4.2"
+        stroke="#2F6B4F"
+        strokeWidth="3.4"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* fruit — slightly irregular curve keeps the hand-drawn feel */}
+      <path
+        d="M32 15.5c15-.5 24.5 10 24 23-.5 13-11 22-24.5 21.5C18.5 59.5 8 51 8.2 38 8.4 25.5 18 16 32 15.5Z"
+        fill="#DE5A38"
+      />
+      <ellipse
+        cx="21.5"
+        cy="30"
+        rx="6.4"
+        ry="4.2"
+        transform="rotate(-38 21.5 30)"
+        fill="#ffffff"
+        opacity="0.22"
+      />
+    </svg>
+  )
+}

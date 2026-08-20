@@ -1,0 +1,172 @@
+{
+  "surveyId": "care-closet-eoy-2026",
+  "title": "Care Closet Survey: End of Year Review",
+  "organization": "Let's Ketchup",
+  "intro": "Please complete our end-of-year review so we can continue to best serve your district. We will use this data to make informed decisions for the upcoming school year. Thank you!",
+  "estimatedMinutes": 5,
+  "questions": [
+    {
+      "id": "district",
+      "type": "select",
+      "required": true,
+      "title": "Which district do you represent?",
+      "options": [
+        { "id": "bbchs", "label": "BBCHS" },
+        { "id": "bradley", "label": "Bradley" },
+        { "id": "grant_park", "label": "Grant Park" },
+        { "id": "herscher", "label": "Herscher" },
+        { "id": "kankakee", "label": "Kankakee" },
+        { "id": "manteno", "label": "Manteno" },
+        { "id": "momence", "label": "Momence" },
+        { "id": "pembroke", "label": "Pembroke" },
+        { "id": "st_anne", "label": "St. Anne" }
+      ],
+      "allowOther": true,
+      "otherLabel": "Other (please specify)"
+    },
+    {
+      "id": "contact_continuation",
+      "type": "radio",
+      "required": true,
+      "title": "Will you continue to be the contact for the upcoming school year?",
+      "options": [
+        { "id": "yes", "label": "Yes" },
+        { "id": "no", "label": "No" },
+        { "id": "unsure", "label": "Unsure at this time" }
+      ],
+      "followUp": {
+        "showWhen": ["no", "unsure"],
+        "id": "next_contact_info",
+        "type": "textarea",
+        "required": false,
+        "title": "If known, please share the name and contact information of the next contact."
+      }
+    },
+    {
+      "id": "students_impacted",
+      "type": "text",
+      "required": true,
+      "title": "How many students are estimated to have been impacted by the total donations?",
+      "helper": "A rough estimate is fine — a number, a range, or a short description."
+    },
+    {
+      "id": "nonperishables",
+      "type": "select-rank",
+      "required": true,
+      "maxSelect": 3,
+      "title": "Which non-perishables were most popular this school year?",
+      "selectPrompt": "Select up to 3.",
+      "rankPrompt": "Now drag your selections into order — most popular first.",
+      "options": [
+        { "id": "granola_bars", "label": "Granola Bars" },
+        { "id": "microwaveable", "label": "Microwaveable Items", "sublabel": "mac and cheese, etc." },
+        { "id": "canned_goods", "label": "Canned Goods" },
+        { "id": "ramen", "label": "Ramen" },
+        { "id": "fruit_snacks", "label": "Fruit Snacks" },
+        { "id": "popchips", "label": "Popchips" }
+      ],
+      "allowOther": true,
+      "otherLabel": "Other (please specify)",
+      "noneOption": { "id": "none", "label": "None were especially popular" }
+    },
+    {
+      "id": "hygiene",
+      "type": "select-weight",
+      "required": true,
+      "maxSelect": 3,
+      "title": "Which hygiene items were most requested?",
+      "selectPrompt": "Select up to 3.",
+      "weightPrompt": "Now weight your selections by how requested each was. Your weights must total 100%.",
+      "options": [
+        { "id": "deodorant", "label": "Deodorant" },
+        { "id": "soap", "label": "Soap" },
+        { "id": "shampoo", "label": "Shampoo" },
+        { "id": "hair_care", "label": "Brushes, Combs, Hair Care" },
+        { "id": "toothpaste", "label": "Toothpaste" },
+        { "id": "pads_tampons", "label": "Pads/Tampons" },
+        { "id": "chapstick", "label": "Chapstick" }
+      ],
+      "allowOther": true,
+      "otherLabel": "Other (please specify)",
+      "noneOption": { "id": "none", "label": "None were especially requested" }
+    },
+    {
+      "id": "clothing",
+      "type": "select-weight",
+      "required": true,
+      "maxSelect": 3,
+      "title": "Which clothing items were most useful?",
+      "selectPrompt": "Select up to 3.",
+      "weightPrompt": "Now weight your selections by how useful each was. Your weights must total 100%.",
+      "options": [
+        { "id": "underwear", "label": "Underwear" },
+        { "id": "socks", "label": "Socks" },
+        { "id": "tshirts", "label": "T-Shirts" },
+        { "id": "long_sleeved", "label": "Long-sleeved Shirts" },
+        { "id": "hoodies", "label": "Hoodies" },
+        { "id": "sweatshirts", "label": "Sweatshirts" },
+        { "id": "sweatpants", "label": "Sweatpants" },
+        { "id": "leggings", "label": "Leggings" },
+        { "id": "hats_gloves", "label": "Hats and Gloves" }
+      ],
+      "allowOther": true,
+      "otherLabel": "Other (please specify)",
+      "noneOption": { "id": "none", "label": "None were especially useful" }
+    },
+    {
+      "id": "sizes",
+      "type": "multi-select",
+      "required": false,
+      "title": "With the most utilized clothing, what sizes (or size ranges) were most useful?",
+      "selectPrompt": "Select all that apply.",
+      "options": [
+        { "id": "youth_4_6", "label": "Youth 4–6" },
+        { "id": "youth_8_10", "label": "Youth 8–10" },
+        { "id": "youth_12_16", "label": "Youth 12–16" },
+        { "id": "adult_s", "label": "Adult S" },
+        { "id": "adult_m", "label": "Adult M" },
+        { "id": "adult_l", "label": "Adult L" },
+        { "id": "adult_xl", "label": "Adult XL" },
+        { "id": "adult_2xl_plus", "label": "Adult 2XL or larger" }
+      ],
+      "allowOther": true,
+      "otherLabel": "Other (please specify)"
+    },
+    {
+      "id": "missing_items",
+      "type": "textarea",
+      "required": false,
+      "title": "Are there any items not on the list that would better benefit your school district?"
+    },
+    {
+      "id": "testimonial_permission",
+      "type": "radio",
+      "required": true,
+      "title": "May we publish your name and school district with your testimonial?",
+      "helper": "This assists with fundraising and grant writing — via social media and/or included in grant information. Thank you for your previous input that has helped our impact resonate beyond the numerical data!",
+      "options": [
+        { "id": "yes_both", "label": "Yes for both!" },
+        { "id": "district_only", "label": "School district without name" },
+        { "id": "not_now", "label": "Not at this time" }
+      ]
+    },
+    {
+      "id": "delivery_feedback",
+      "type": "textarea",
+      "required": false,
+      "title": "What is your input on the delivery process from this year?",
+      "helper": "What went well overall and/or what would you want to change, if anything?"
+    },
+    {
+      "id": "comments",
+      "type": "textarea",
+      "required": false,
+      "title": "Please include any other comments or questions, if you have them!",
+      "helper": "We thank you for your work in meeting the needs of your students!"
+    }
+  ],
+  "thankYou": {
+    "title": "Thank you!",
+    "body": "Your responses help us make sure every Care Closet is stocked with what students actually need. We're grateful for your partnership — see you next school year!"
+  }
+}

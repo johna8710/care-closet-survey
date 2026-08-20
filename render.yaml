@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: care-closet-survey
+    runtime: node
+    plan: starter # a persistent disk requires a paid instance type; use "free" only without a disk
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_KEY
+        sync: false # set this yourself in the Render dashboard — it is the results password
+    disk:
+      name: survey-data
+      mountPath: /var/data
+      sizeGB: 1

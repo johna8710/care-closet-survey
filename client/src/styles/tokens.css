@@ -1,0 +1,79 @@
+/* ---------------------------------------------------------------
+   Let's Ketchup — Care Closet Survey
+   Design tokens. Warm "community pantry" palette from letsketchup.org,
+   tuned so every text pairing clears WCAG AA (4.5:1) on cream.
+   --------------------------------------------------------------- */
+
+:root {
+  /* Surfaces */
+  --cream: #fef6ed;
+  --cream-alt: #faece1;
+  --cream-deep: #f5e2d2;
+  --surface: #fffdf9;
+  --surface-raised: #ffffff;
+
+  /* Ink */
+  --ink: #1d0e03; /* 17.4:1 on cream */
+  --ink-soft: #4a3a2e; /* 9.0:1  */
+  --ink-mute: #6f5f52; /* 5.7:1  — smallest text we allow */
+
+  /* Tomato: decorative vs. text-safe vs. button-safe */
+  --tomato: #e03939; /* marks, borders, fills (3:1 UI contrast) */
+  --tomato-ink: #b62a2a; /* 5.9:1 on cream — safe for text */
+  --tomato-btn: #d02b2b; /* white text = 5.2:1 */
+  --tomato-btn-hover: #b62a2a; /* white text = 6.3:1 */
+  --tomato-body: #de5a38; /* the logo's fruit color */
+  --tomato-wash: #fdeee9;
+  --tomato-wash-deep: #fbe1d9;
+
+  /* Green — progress, success, the stem */
+  --green: #2f6b4f; /* 5.9:1 on cream, white on it = 6.3:1 */
+  --green-mid: #4e8f6c;
+  --green-soft: #7fb093;
+  --green-wash: #ecf4ef;
+
+  /* Accents */
+  --orange: #ff8044;
+  --amber: #e8a33d;
+
+  /* Lines */
+  --taupe: #c8bdb4;
+  --line: #e4d7cb;
+  --line-strong: #cfbdad;
+
+  /* Type */
+  --font-display: 'Archivo', 'Archivo Black', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-body: 'Nunito Sans', 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Radii */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 26px;
+  --r-pill: 999px;
+
+  /* Warm shadows (brown-based, never grey) */
+  --shadow-sm: 0 1px 2px rgba(93, 58, 27, 0.07);
+  --shadow-md: 0 2px 4px rgba(93, 58, 27, 0.06), 0 10px 24px -14px rgba(93, 58, 27, 0.28);
+  --shadow-lg: 0 2px 6px rgba(93, 58, 27, 0.06), 0 26px 54px -26px rgba(93, 58, 27, 0.4);
+  --shadow-focus: 0 0 0 3px rgba(224, 57, 57, 0.28);
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 0.9, 0.3, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --card-max: 720px;
+  --tap: 48px; /* minimum touch target */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

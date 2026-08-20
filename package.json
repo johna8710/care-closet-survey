@@ -1,0 +1,25 @@
+{
+  "name": "care-closet-survey",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Let's Ketchup — Care Closet End-of-Year Review survey app (Express API + Vite/React client)",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch server/index.js",
+    "dev:client": "npm run dev --prefix client",
+    "dev:all": "concurrently -n server,client -c magenta,cyan \"npm:dev\" \"npm:dev:client\"",
+    "build": "npm install --prefix client && npm run build --prefix client",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
