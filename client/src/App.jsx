@@ -5,7 +5,7 @@ import WelcomeScreen from './components/WelcomeScreen.jsx'
 import QuestionScreen from './components/QuestionScreen.jsx'
 import ThankYouScreen from './components/ThankYouScreen.jsx'
 import { buildAnswers } from './lib/answers.js'
-import { buildSteps, stepCounter } from './lib/steps.js'
+import { buildSteps, countVisible, stepCounter } from './lib/steps.js'
 import { validateStep } from './lib/validate.js'
 import { clearSaved, hasProgress, loadSaved, saveState } from './lib/storage.js'
 
@@ -30,6 +30,9 @@ export default function App() {
   // Screens, not questions: the weighting / ranking halves are their own steps
   // and appear only once something is selected (see lib/steps.js).
   const steps = useMemo(() => buildSteps(QUESTIONS, answers), [answers])
+  // Conditional questions come and go with the budget allocation, so "of M"
+  // counts what this respondent will actually be asked, not what exists.
+  const visibleCount = useMemo(() => countVisible(QUESTIONS, answers), [answers])
   const stepsRef = useRef(steps)
   stepsRef.current = steps
   const total = steps.length
@@ -41,7 +44,11 @@ export default function App() {
     if (!resume) return null
     const savedSteps = buildSteps(QUESTIONS, resume.answers || {})
     const at = savedSteps[Math.min(resume.index || 0, savedSteps.length - 1)]
-    return { ...resume, questionNumber: at ? at.number : 1 }
+    return {
+      ...resume,
+      questionNumber: at ? at.number : 1,
+      questionTotal: at ? at.total : TOTAL_QUESTIONS
+    }
   }, [resume])
 
   /* ---------------- restore ---------------- */
@@ -185,7 +192,7 @@ export default function App() {
     return Math.round(((safeIndex + 1) / (total + 1)) * 100)
   }, [phase, safeIndex, total])
 
-  const counter = phase === 'question' ? stepCounter(step, TOTAL_QUESTIONS) : null
+  const counter = phase === 'question' ? stepCounter(step, visibleCount) : null
 
   return (
     <div className="app">
@@ -208,7 +215,7 @@ export default function App() {
         {phase === 'question' && step ? (
           <QuestionScreen
             step={step}
-            questionCount={TOTAL_QUESTIONS}
+            questionCount={visibleCount}
             answers={answers}
             setAnswer={setAnswer}
             onNext={goNext}

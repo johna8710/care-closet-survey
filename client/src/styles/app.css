@@ -268,6 +268,20 @@ textarea {
   line-height: 1.5;
 }
 
+/* The lead variant: helper text that *is* the question's reason for existing
+   (the budget explainer), set as a warm callout instead of fine print. */
+.q-helper[data-lead='true'] {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  background: var(--tomato-wash);
+  border: 1px solid var(--tomato-wash-deep);
+  border-left: 4px solid var(--tomato);
+  color: var(--ink-soft);
+  font-size: 0.97rem;
+  line-height: 1.58;
+}
+
 .q-prompt {
   margin-top: 12px;
   font-weight: 700;

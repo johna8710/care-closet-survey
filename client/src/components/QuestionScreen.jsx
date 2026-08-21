@@ -3,6 +3,7 @@ import SelectField from './fields/SelectField.jsx'
 import RadioField from './fields/RadioField.jsx'
 import ChoiceListField from './fields/ChoiceListField.jsx'
 import WeightField from './fields/WeightField.jsx'
+import AllocateField from './fields/AllocateField.jsx'
 import RankField from './fields/RankField.jsx'
 import AutoTextarea from './fields/AutoTextarea.jsx'
 import { AlertIcon, ArrowLeft, ArrowRight } from './icons.jsx'
@@ -95,7 +96,13 @@ export default function QuestionScreen({
               </span>
             ) : null}
           </h1>
-          {question.helper && part === 'main' ? <p className="q-helper">{question.helper}</p> : null}
+          {question.helper && part === 'main' ? (
+            // The budget explainer is the reason this screen exists, so it is
+            // set as a callout rather than fine print.
+            <p className="q-helper" data-lead={question.type === 'allocate' ? 'true' : 'false'}>
+              {question.helper}
+            </p>
+          ) : null}
           {prompt ? <p className="q-prompt">{prompt}</p> : null}
         </div>
 
@@ -109,6 +116,14 @@ export default function QuestionScreen({
 
         {part === 'main' ? (
           <>
+            {question.type === 'allocate' ? (
+              <AllocateField
+                question={question}
+                value={value}
+                onChange={(v) => setAnswer(question.id, v)}
+              />
+            ) : null}
+
             {question.type === 'select' ? (
               <SelectField
                 question={question}

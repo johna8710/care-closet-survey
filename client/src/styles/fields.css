@@ -354,6 +354,12 @@ fieldset {
   font-weight: 600;
 }
 
+/* A category left at 0% is a deliberate answer, not a mistake — say so in a
+   neutral voice rather than the warning red. */
+.meter-over[data-tone='info'] {
+  color: var(--ink-soft);
+}
+
 /* Rows */
 
 .weight-rows {
@@ -393,6 +399,17 @@ fieldset {
   line-height: 1.3;
   min-width: 0;
   overflow-wrap: break-word;
+}
+
+/* Fixed-category allocation rows carry a short explainer under the name. */
+.weight-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--ink-mute);
 }
 
 .stepper {

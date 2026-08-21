@@ -27,6 +27,16 @@ export function optionIds(q) {
   return new Set((q.options ?? []).map((o) => o.id));
 }
 
+/** Category ids of an `allocate` question, in definition order. */
+export function categoryIds(q) {
+  return (q.categories ?? []).map((c) => c.id);
+}
+
+export function categoryLabel(q, id) {
+  const cat = (q.categories ?? []).find((c) => c.id === id);
+  return cat ? cat.label : id;
+}
+
 export function optionLabel(q, id) {
   if (id === OTHER_ID) return q.otherLabel ?? 'Other';
   if (q.noneOption && id === q.noneOption.id) return q.noneOption.label;

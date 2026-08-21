@@ -77,6 +77,18 @@ export function buildColumns() {
       }
       pushOtherText(q);
       pushNoneFlag(q);
+    } else if (q.type === 'allocate') {
+      // One column per fixed category, holding its percentage of the budget.
+      for (const id of (q.categories ?? []).map((c) => c.id)) {
+        cols.push({
+          key: `${q.id}__${id}`,
+          header: `${q.id}__${id} (%)`,
+          get: (r) => {
+            const pct = r.answers?.[q.id]?.weights?.[id];
+            return typeof pct === 'number' ? pct : '';
+          },
+        });
+      }
     } else if (q.type === 'select-weight') {
       const ids = [...(q.options ?? []).map((o) => o.id)];
       if (q.allowOther) ids.push(OTHER_ID);

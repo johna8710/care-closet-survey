@@ -1,9 +1,10 @@
 # Care Closet Survey — Let's Ketchup
 
 A small web app that replaces the Google Forms end-of-year Care Closet survey. Partner
-districts get a clean, one-question-at-a-time survey (including a "pick your top 3, then
-weight them to 100%" question Google Forms can't do), and you get the results as JSON or
-a spreadsheet-ready CSV.
+districts get a clean, one-question-at-a-time survey (including a "split your budget
+across three categories so it totals 100%" question and "pick your top 3, then drag them
+into order" questions that Google Forms can't do), and you get the results as JSON or a
+spreadsheet-ready CSV.
 
 - **Survey wording and questions** live in one file: `shared/survey.json`.
 - **Responses** are stored in a small database file (SQLite) on the server, or in Postgres
@@ -178,13 +179,63 @@ Columns follow the order of questions in `shared/survey.json`.
 | Text / long text | one column named after the question id (e.g. `students_impacted`) |
 | Radio / dropdown | one column with the chosen answer's **label** (e.g. `district` → `Herscher`); plus `district__other_text` when the question allows "Other" |
 | Radio with a follow-up | the follow-up gets its own column (`next_contact_info`) |
-| Select-3 + weights (`select-weight`) | one column **per option** holding that option's percentage, blank if it wasn't picked (`clothing__socks (%)`), plus `clothing__other (%)`, `clothing__other_text`, and `clothing__none` (`Yes` when the "none" choice was used) |
-| Select-3 + ranking (`select-rank`) | one column **per option** holding that option's rank — `1` is the top pick — blank if it wasn't picked (`nonperishables__ramen (rank)`), plus `nonperishables__other (rank)`, `nonperishables__other_text`, and `nonperishables__none` |
+| Budget split (`allocate`) | one column **per category** holding its percentage (`budget_allocation__food (%)`, `budget_allocation__hygiene (%)`, `budget_allocation__clothing (%)`). Always filled in for a completed response — a category that got nothing shows `0`, not a blank |
+| Select-3 + ranking (`select-rank`) | one column **per option** holding that option's rank — `1` is the top pick — blank if it wasn't picked (`nonperishables__ramen (rank)`, `hygiene__soap (rank)`, `clothing__socks (rank)`), plus `…__other (rank)`, `…__other_text`, and `…__none` (`Yes` when the "none" choice was used) |
 | Tick all that apply (`multi-select`) | one column **per option**, `Yes` when ticked and blank when not (`sizes__adult_m`), plus `sizes__other` and `sizes__other_text` |
+| Select-3 + weights (`select-weight`) | one column **per option** holding that option's percentage, blank if it wasn't picked (`… (%)`), plus `…__other (%)`, `…__other_text`, and `…__none`. *(Still supported; no question in the current survey uses it.)* |
+
+**Skipped questions are blank.** A question that was hidden by a `showIf` rule (see below)
+has no answer at all, so every one of its columns is empty — e.g. a district that gave
+Clothing 0% has blanks across all the `clothing__…` and `sizes__…` columns, and one that
+gave Food 0% has blanks across `nonperishables__…` and `popchips`.
 
 Every row also carries `response_id`, `submitted_at`, and at the end `started_at`,
 `completed_at`, `user_agent`. Commas, quotes, and line breaks inside answers are escaped
 properly, and the file starts with a byte-order mark so Excel reads accents correctly.
+
+The current survey produces 58 columns, in this order:
+
+```
+response_id, submitted_at,
+district, district__other_text,
+contact_continuation, next_contact_info,
+students_impacted,
+budget_allocation__food (%), budget_allocation__hygiene (%), budget_allocation__clothing (%),
+nonperishables__… (rank) ×5, nonperishables__other (rank), nonperishables__other_text, nonperishables__none,
+popchips,
+hygiene__… (rank) ×7, hygiene__other (rank), hygiene__other_text, hygiene__none,
+clothing__… (rank) ×9, clothing__other (rank), clothing__other_text, clothing__none,
+sizes__… ×8, sizes__other, sizes__other_text,
+missing_items, testimonial_permission, delivery_feedback, comments,
+started_at, completed_at, user_agent
+```
+
+---
+
+## The questions
+
+All 13 live in `shared/survey.json`, in this order. "Shown when" marks the questions that
+appear only if the respondent put money into that budget category.
+
+| # | Question id | Type | Required | Shown when |
+| --- | --- | --- | --- | --- |
+| 1 | `district` | select (+ Other) | yes | always |
+| 2 | `contact_continuation` | radio (+ follow-up `next_contact_info`) | yes | always |
+| 3 | `students_impacted` | text | yes | always |
+| 4 | `budget_allocation` | **allocate** — Food / Hygiene / Clothing, must total 100% | yes | always |
+| 5 | `nonperishables` | select-rank (top 3) | yes | Food > 0% |
+| 6 | `popchips` | radio (Yes / No) | yes | Food > 0% |
+| 7 | `hygiene` | select-rank (top 3) | yes | Hygiene > 0% |
+| 8 | `clothing` | select-rank (top 3) | yes | Clothing > 0% |
+| 9 | `sizes` | multi-select | no | Clothing > 0% |
+| 10 | `missing_items` | textarea | no | always |
+| 11 | `testimonial_permission` | radio | yes | always |
+| 12 | `delivery_feedback` | textarea | no | always |
+| 13 | `comments` | textarea | no | always |
+
+`district` now includes **YMCA** alongside the nine school districts. Popchips is no
+longer one of the `nonperishables` options — it has its own yes/no question (6) so it can
+be tracked separately from the top-3 picks.
 
 ---
 
@@ -194,8 +245,8 @@ Open `shared/survey.json`. Both the survey pages and the server's validation rea
 this one file, so a change here updates both. After editing, redeploy (on Render: push to
 GitHub, or hit **Manual Deploy**).
 
-- **Change wording** — edit `title`, `helper`, `selectPrompt`, `weightPrompt`, or the
-  `label` of an option.
+- **Change wording** — edit `title`, `helper`, `selectPrompt`, `rankPrompt`,
+  `weightPrompt`, or the `label` of an option or category.
 - **Add or remove an option** — add/remove an entry in that question's `options` array.
   Each needs a unique `id` (lowercase, underscores) and a `label`.
 - **Make something optional/required** — flip `"required": true` / `false`.
@@ -206,13 +257,55 @@ Keep `id` values stable if you can: they become the CSV column names, so renamin
 makes this year's export not line up with last year's.
 
 Question types available: `text`, `textarea`, `radio`, `select`, `multi-select`,
-`select-weight`, `select-rank`.
+`allocate`, `select-rank`, `select-weight`.
 
-`select-weight` and `select-rank` are **two-screen** questions: the respondent picks their
-items on one screen, then weights (to 100%) or drags them into order on the next. Picking
-the exclusive "none" option skips the second screen. Their prompts are `selectPrompt` plus
-`weightPrompt` / `rankPrompt`. Weights start at 0 — nothing is pre-filled for the
-respondent.
+`select-rank` and `select-weight` are **two-screen** questions: the respondent picks their
+items on one screen, then drags them into order (or weights them to 100%) on the next.
+Picking the exclusive "none" option skips the second screen. Their prompts are
+`selectPrompt` plus `rankPrompt` / `weightPrompt`.
+
+`allocate` is the budget-split question. Unlike the others it has **no `options` and no
+selecting** — it has a fixed `categories` array, and the respondent moves percentages
+between all of them until they total exactly 100:
+
+```json
+{
+  "id": "budget_allocation",
+  "type": "allocate",
+  "required": true,
+  "title": "How would you like your funds allocated?",
+  "categories": [
+    { "id": "food", "label": "Food", "sublabel": "non-perishables and snacks" },
+    { "id": "hygiene", "label": "Hygiene", "sublabel": "personal care items" },
+    { "id": "clothing", "label": "Clothing", "sublabel": "clothes, sizes youth to adult" }
+  ]
+}
+```
+
+Adding or renaming a category automatically adds/renames its CSV column, and any question
+whose `showIf` names the old id would stop appearing — so change both together.
+
+### Conditional questions (`showIf`)
+
+Any question can carry a `showIf` block. It is respected in both places: the survey pages
+skip the question, and the server neither requires it nor stores an answer for it.
+
+```json
+"showIf": { "questionId": "budget_allocation", "categoryAboveZero": "food" }
+```
+
+Read: *show this question only when `budget_allocation` gave the `food` category more than
+0%.* That is how the survey stops asking a district about clothing when none of its budget
+is going to clothing.
+
+The server decides visibility from **the answers in the submission itself**, not from
+anything the client claims. So:
+
+- a hidden question is never "required" — leaving it out is fine;
+- an answer sent for a hidden question anyway (a stale value from the browser's autosave,
+  say) is **silently dropped** — the submission still succeeds, and the stored response
+  and CSV row simply have nothing for that question;
+- a *visible* required question that is missing is still a `400`, as always.
 
 ---
 
@@ -242,22 +335,35 @@ Answer shapes (the server is lenient about shape, strict about the rules):
 | `radio`, `select` | `"herscher"` or `{ "value": "other", "other": "Kankakee Valley" }` | `{ "value": "…", "other"?: "…" }` |
 | radio follow-up | top-level `{ "next_contact_info": "…" }`, or nested on the parent as `{ "value": "no", "followUp": "…" }` | top-level string under the follow-up's id |
 | `multi-select` | `{ "selected": ["adult_m","other"], "other": "Adult 3XL" }` | same, normalised |
-| `select-weight` | `{ "selected": ["granola_bars","ramen","other"], "other": "Pop-Tarts", "weights": { "granola_bars": 50, "ramen": 30, "other": 20 } }` | same, normalised |
+| `allocate` | `{ "weights": { "food": 40, "hygiene": 40, "clothing": 20 } }` (a bare `{ "food": 40, … }` map and numeric strings are also accepted) | `{ "weights": { "food": 40, "hygiene": 40, "clothing": 20 } }` |
 | `select-rank` | `{ "selected": ["granola_bars","ramen"], "ranking": ["ramen","granola_bars"] }` | same, normalised (`ranking[0]` is the top pick) |
-| `select-weight` / `select-rank`, "none" | `{ "selected": ["none"] }` or `{ "none": true }` | `{ "selected": ["none"], "none": true }` |
+| `select-weight` | `{ "selected": ["granola_bars","ramen","other"], "other": "Pop-Tarts", "weights": { "granola_bars": 50, "ramen": 30, "other": 20 } }` | same, normalised |
+| `select-rank` / `select-weight`, "none" | `{ "selected": ["none"] }` or `{ "none": true }` | `{ "selected": ["none"], "none": true }` |
 
 Rules enforced (a failure returns `400` with a plain-English `error` message):
 
 - `surveyId` must match `shared/survey.json`
-- every `required` question must have an answer
+- every `required` **and visible** question must have an answer (see `showIf` below)
 - choice answers must use a known option `id` (or `"other"` when the question allows it,
   in which case the `other` text must be non-empty)
-- `select-weight`: 1…`maxSelect` selections, all known ids; the "none" choice must be on
-  its own and needs no weights; otherwise `weights` must cover exactly the selected items
+- `allocate`: `weights` must have a key for **every** category and no others — an unknown
+  key or a missing one is rejected — each value a whole number from 0 to 100, and the
+  values must total **exactly 100** (so 33/33/33 fails: it totals 99)
+- `select-rank`: 1…`maxSelect` selections, all known ids; the "none" choice must be on its
+  own and needs no ranking; otherwise `ranking` must be an exact permutation of `selected`
+  (every pick ordered exactly once)
+- `select-weight`: same selection rules; `weights` must cover exactly the selected items
   with whole numbers ≥ 0 that total **exactly 100**
-- `select-rank`: same selection rules; `ranking` must be an exact permutation of
-  `selected` (every pick ordered exactly once). "none" needs no ranking
 - `multi-select`: any number of known ids (no cap unless `maxSelect` is set)
+
+**Conditional questions.** A question with a `showIf` block is only asked when the
+condition holds — currently `{ "questionId": "budget_allocation", "categoryAboveZero":
+"food" }`, meaning "that category got more than 0%". The server evaluates this from the
+submitted `budget_allocation` answer, so the client cannot talk it out of a required
+question. A hidden question is not required, and an answer supplied for one anyway is
+**dropped** rather than rejected: the submission still returns `201` and the stored
+response has no value for it. Since `budget_allocation` is itself required, an invalid or
+missing allocation is a `400` before any of this is considered.
 
 Unknown extra fields are ignored. Success: `201 {"id": "…uuid…"}`.
 Submissions are rate-limited to 20 per hour per IP address.

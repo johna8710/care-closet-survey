@@ -9,8 +9,9 @@ export default function WelcomeScreen({ survey, questionCount, resume, onBegin, 
         <div className="resume">
           <h2>Welcome back!</h2>
           <p>
-            You left off at question {Math.min(resume.questionNumber || resume.index + 1, questionCount)} of{' '}
-            {questionCount}
+            You left off at question{' '}
+            {Math.min(resume.questionNumber || resume.index + 1, resume.questionTotal || questionCount)} of{' '}
+            {resume.questionTotal || questionCount}
             {resume.savedAt ? ` — saved ${savedAgo(resume.savedAt)}` : ''}. Your answers are still here.
           </p>
           <div className="resume-actions">

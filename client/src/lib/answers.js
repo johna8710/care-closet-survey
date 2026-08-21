@@ -10,12 +10,18 @@
  *                                 none?: true, weights?: { a: 60, b: 40 } }
  *   select-rank              -> { selected: ["a","b"], other?: "…",
  *                                 none?: true, ranking: ["b","a"] }
+ *   allocate                 -> { weights: { food: 50, hygiene: 30, clothing: 20 } }
  *
- * select-weight weights always sum to exactly 100 (and start at 0 — nothing is
- * pre-filled for the respondent); select-rank ranking is always a permutation of
- * `selected`. Both drop their second half when the exclusive "none" option is
- * chosen.
+ * select-weight and allocate weights always sum to exactly 100 (and start at
+ * 0 — nothing is pre-filled for the respondent); select-rank ranking is always
+ * a permutation of `selected`. select-weight / select-rank drop their second
+ * half when the exclusive "none" option is chosen.
+ *
+ * Questions hidden by a `showIf` rule are left out of the POST entirely, even
+ * when they were answered earlier — see buildAnswers().
  */
+
+import { visibleQuestions } from './visibility.js'
 
 export const emptySelection = () => ({ selected: [], other: '', none: false })
 
@@ -52,6 +58,23 @@ export function rankValue(value) {
   return { ...base, ranking }
 }
 
+/** allocate: every category always present, missing ones reading as 0. */
+export function allocateValue(value, categories = []) {
+  const stored = value && typeof value === 'object' && value.weights && typeof value.weights === 'object'
+    ? value.weights
+    : {}
+  const weights = {}
+  categories.forEach((c) => {
+    weights[c.id] = clampPct(Number(stored[c.id]) || 0)
+  })
+  return { weights }
+}
+
+export function allocateTotal(value, categories = []) {
+  const v = allocateValue(value, categories)
+  return categories.reduce((sum, c) => sum + (Number(v.weights[c.id]) || 0), 0)
+}
+
 export function weightTotal(value) {
   const v = weightValue(value)
   return v.selected.reduce((sum, id) => sum + (Number(v.weights[id]) || 0), 0)
@@ -80,7 +103,13 @@ export function clampPct(n) {
   return Math.max(0, Math.min(100, Math.round(n)))
 }
 
-/** Strip transient UI state before sending to the server. */
+/**
+ * Strip transient UI state before sending to the server, and drop anything the
+ * respondent can no longer see: a question hidden by its `showIf` rule never
+ * reaches the server, even if it was answered before the allocation changed.
+ * (The answer stays in localStorage — flip the category back above 0% and the
+ * work is still there.)
+ */
 export function buildAnswers(questions, answers) {
   const out = {}
   const push = (id, value) => {
@@ -89,9 +118,16 @@ export function buildAnswers(questions, answers) {
     out[id] = value
   }
 
-  questions.forEach((q) => {
+  visibleQuestions(questions, answers).forEach((q) => {
     const value = answers[q.id]
     if (value === undefined) return
+
+    if (q.type === 'allocate') {
+      const categories = q.categories || []
+      if (categories.length === 0) return
+      push(q.id, { weights: allocateValue(value, categories).weights })
+      return
+    }
 
     if (q.type === 'select-weight' || q.type === 'select-rank') {
       const v = q.type === 'select-rank' ? rankValue(value) : weightValue(value)

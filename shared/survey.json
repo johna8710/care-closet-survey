@@ -9,7 +9,7 @@
       "id": "district",
       "type": "select",
       "required": true,
-      "title": "Which district do you represent?",
+      "title": "Which district or organization do you represent?",
       "options": [
         { "id": "bbchs", "label": "BBCHS" },
         { "id": "bradley", "label": "Bradley" },
@@ -19,7 +19,8 @@
         { "id": "manteno", "label": "Manteno" },
         { "id": "momence", "label": "Momence" },
         { "id": "pembroke", "label": "Pembroke" },
-        { "id": "st_anne", "label": "St. Anne" }
+        { "id": "st_anne", "label": "St. Anne" },
+        { "id": "ymca", "label": "YMCA" }
       ],
       "allowOther": true,
       "otherLabel": "Other (please specify)"
@@ -50,10 +51,23 @@
       "helper": "A rough estimate is fine — a number, a range, or a short description."
     },
     {
+      "id": "budget_allocation",
+      "type": "allocate",
+      "required": true,
+      "title": "How would you like your funds allocated?",
+      "helper": "Let's Ketchup has allocated a budget for each Care Closet partner, and we want to make sure what we purchase is focused on the needs of your district. Unless you tell us otherwise, funds are split evenly across the three categories below. Set the percentages to show us where your budget will help most — they must total 100%.",
+      "categories": [
+        { "id": "food", "label": "Food", "sublabel": "non-perishables and snacks" },
+        { "id": "hygiene", "label": "Hygiene", "sublabel": "personal care items" },
+        { "id": "clothing", "label": "Clothing", "sublabel": "clothes, sizes youth to adult" }
+      ]
+    },
+    {
       "id": "nonperishables",
       "type": "select-rank",
       "required": true,
       "maxSelect": 3,
+      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "food" },
       "title": "Which non-perishables were most popular this school year?",
       "selectPrompt": "Select up to 3.",
       "rankPrompt": "Now drag your selections into order — most popular first.",
@@ -62,21 +76,32 @@
         { "id": "microwaveable", "label": "Microwaveable Items", "sublabel": "mac and cheese, etc." },
         { "id": "canned_goods", "label": "Canned Goods" },
         { "id": "ramen", "label": "Ramen" },
-        { "id": "fruit_snacks", "label": "Fruit Snacks" },
-        { "id": "popchips", "label": "Popchips" }
+        { "id": "fruit_snacks", "label": "Fruit Snacks" }
       ],
       "allowOther": true,
       "otherLabel": "Other (please specify)",
       "noneOption": { "id": "none", "label": "None were especially popular" }
     },
     {
+      "id": "popchips",
+      "type": "radio",
+      "required": true,
+      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "food" },
+      "title": "Separate from your top picks — were Popchips popular at your school this year?",
+      "options": [
+        { "id": "yes", "label": "Yes" },
+        { "id": "no", "label": "No" }
+      ]
+    },
+    {
       "id": "hygiene",
-      "type": "select-weight",
+      "type": "select-rank",
       "required": true,
       "maxSelect": 3,
+      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "hygiene" },
       "title": "Which hygiene items were most requested?",
       "selectPrompt": "Select up to 3.",
-      "weightPrompt": "Now weight your selections by how requested each was. Your weights must total 100%.",
+      "rankPrompt": "Now drag your selections into order — most requested first.",
       "options": [
         { "id": "deodorant", "label": "Deodorant" },
         { "id": "soap", "label": "Soap" },
@@ -92,12 +117,13 @@
     },
     {
       "id": "clothing",
-      "type": "select-weight",
+      "type": "select-rank",
       "required": true,
       "maxSelect": 3,
+      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "clothing" },
       "title": "Which clothing items were most useful?",
       "selectPrompt": "Select up to 3.",
-      "weightPrompt": "Now weight your selections by how useful each was. Your weights must total 100%.",
+      "rankPrompt": "Now drag your selections into order — most useful first.",
       "options": [
         { "id": "underwear", "label": "Underwear" },
         { "id": "socks", "label": "Socks" },
@@ -117,6 +143,7 @@
       "id": "sizes",
       "type": "multi-select",
       "required": false,
+      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "clothing" },
       "title": "With the most utilized clothing, what sizes (or size ranges) were most useful?",
       "selectPrompt": "Select all that apply.",
       "options": [
@@ -136,7 +163,8 @@
       "id": "missing_items",
       "type": "textarea",
       "required": false,
-      "title": "Are there any items not on the list that would better benefit your school district?"
+      "title": "Are there any items not on the list that would better benefit your school district?",
+      "helper": "We'll do our best to accommodate any requests entered on this page; however, these requests are not guaranteed and will be considered secondary to your selections earlier in the survey."
     },
     {
       "id": "testimonial_permission",
