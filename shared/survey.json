@@ -12,6 +12,7 @@
       "title": "Which district or organization do you represent?",
       "options": [
         { "id": "bbchs", "label": "BBCHS" },
+        { "id": "bourbonnais", "label": "Bourbonnais Elementary" },
         { "id": "bradley", "label": "Bradley" },
         { "id": "grant_park", "label": "Grant Park" },
         { "id": "herscher", "label": "Herscher" },
@@ -20,6 +21,7 @@
         { "id": "momence", "label": "Momence" },
         { "id": "pembroke", "label": "Pembroke" },
         { "id": "st_anne", "label": "St. Anne" },
+        { "id": "st_george", "label": "St. George" },
         { "id": "ymca", "label": "YMCA" }
       ],
       "allowOther": true,
@@ -68,7 +70,7 @@
       "required": true,
       "maxSelect": 3,
       "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "food" },
-      "title": "Which non-perishables were most popular this school year?",
+      "title": "Which non-perishables were most popular from our previous donations?",
       "selectPrompt": "Select up to 3.",
       "rankPrompt": "Now drag your selections into order — most popular first.",
       "options": [
@@ -86,11 +88,11 @@
       "id": "popchips",
       "type": "radio",
       "required": true,
-      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "food" },
-      "title": "Separate from your top picks — were Popchips popular at your school this year?",
+      "title": "Would you like to keep receiving Popchips?",
+      "helper": "In addition to your selections in this survey, Our Home in Kankakee provides a large donation of Popchips for Kankakee County students. If you would not like Popchips, please let us know below.",
       "options": [
-        { "id": "yes", "label": "Yes" },
-        { "id": "no", "label": "No" }
+        { "id": "yes", "label": "Yes — keep the Popchips coming!" },
+        { "id": "no", "label": "No thanks — please leave us out of the Popchips donation" }
       ]
     },
     {
