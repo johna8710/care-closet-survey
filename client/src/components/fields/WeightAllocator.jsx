@@ -7,6 +7,15 @@ import { clampPct, evenSplit } from '../../lib/answers.js'
 const WARM = ['#E03939', '#FF8044', '#E8A33D']
 const DONE = ['#2F6B4F', '#4E8F6C', '#7FB093']
 
+/* Percentages move in tens: a 0–100 slider is a short drag on a phone, and
+   whole tens are both easier to hit and easier to total to 100. The +/- buttons
+   step by the same amount, snapping to the nearest ten first (34 -> 40 / 30), so
+   a value typed into the box still lands back on the grid. The box itself stays
+   free — anyone who really wants 33% can type it. */
+const STEP = 10
+const stepUp = (n) => Math.min(100, Math.floor(n / STEP) * STEP + STEP)
+const stepDown = (n) => Math.max(0, Math.ceil(n / STEP) * STEP - STEP)
+
 /**
  * The constant-sum allocator: a live total meter, one slider + numeric stepper
  * per item, and "Split evenly". Shared by both places 100% gets divided up —
@@ -113,9 +122,9 @@ export default function WeightAllocator({
                   <button
                     type="button"
                     className="step-btn"
-                    onClick={() => setWeight(id, w - 1)}
+                    onClick={() => setWeight(id, stepDown(w))}
                     disabled={w <= 0}
-                    aria-label={`Decrease ${name} by one percent`}
+                    aria-label={`Decrease ${name} by ten percent`}
                   >
                     <MinusIcon />
                   </button>
@@ -145,9 +154,9 @@ export default function WeightAllocator({
                   <button
                     type="button"
                     className="step-btn"
-                    onClick={() => setWeight(id, w + 1)}
+                    onClick={() => setWeight(id, stepUp(w))}
                     disabled={w >= 100}
-                    aria-label={`Increase ${name} by one percent`}
+                    aria-label={`Increase ${name} by ten percent`}
                   >
                     <PlusIcon />
                   </button>
@@ -158,7 +167,7 @@ export default function WeightAllocator({
                 className="slider"
                 min="0"
                 max="100"
-                step="1"
+                step={STEP}
                 value={w}
                 aria-labelledby={`${idPrefix}-${id}`}
                 aria-valuetext={`${w} percent`}

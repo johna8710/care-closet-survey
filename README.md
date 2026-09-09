@@ -1,10 +1,9 @@
 # Care Closet Survey — Let's Ketchup
 
-A small web app that replaces the Google Forms end-of-year Care Closet survey. Partner
-districts get a clean, one-question-at-a-time survey (including a "split your budget
-across three categories so it totals 100%" question and "pick your top 3, then drag them
-into order" questions that Google Forms can't do), and you get the results as JSON or a
-spreadsheet-ready CSV.
+A small web app that replaces the Google Forms Care Closet survey. Partner districts get a
+clean, one-question-at-a-time survey (including a "split your budget across three
+categories so it totals 100%" question that Google Forms can't do), and you get the
+results as JSON or a spreadsheet-ready CSV.
 
 - **Survey wording and questions** live in one file: `shared/survey.json`.
 - **Responses** are stored in a small database file (SQLite) on the server, or in Postgres
@@ -180,8 +179,8 @@ Columns follow the order of questions in `shared/survey.json`.
 | Radio / dropdown | one column with the chosen answer's **label** (e.g. `district` → `Herscher`); plus `district__other_text` when the question allows "Other" |
 | Radio with a follow-up | the follow-up gets its own column (`next_contact_info`) |
 | Budget split (`allocate`) | one column **per category** holding its percentage (`budget_allocation__food (%)`, `budget_allocation__hygiene (%)`, `budget_allocation__clothing (%)`). Always filled in for a completed response — a category that got nothing shows `0`, not a blank |
-| Select-3 + ranking (`select-rank`) | one column **per option** holding that option's rank — `1` is the top pick — blank if it wasn't picked (`nonperishables__ramen (rank)`, `hygiene__soap (rank)`, `clothing__socks (rank)`), plus `…__other (rank)`, `…__other_text`, and `…__none` (`Yes` when the "none" choice was used) |
-| Tick all that apply (`multi-select`) | one column **per option**, `Yes` when ticked and blank when not (`sizes__adult_m`), plus `sizes__other` and `sizes__other_text` |
+| Tick all that apply (`multi-select`) | one column **per option**, `Yes` when ticked and blank when not (`nonperishables__ramen`, `hygiene__soap`, `clothing__socks`, `sizes__adult_m`), plus `…__other`, `…__other_text`, and — where the question offers one — `…__none` (`Yes` when the "none" choice was used) |
+| Select-3 + ranking (`select-rank`) | one column **per option** holding that option's rank — `1` is the top pick — blank if it wasn't picked, plus `…__other (rank)`, `…__other_text`, and `…__none`. *(Still supported; no question in the current survey uses it.)* |
 | Select-3 + weights (`select-weight`) | one column **per option** holding that option's percentage, blank if it wasn't picked (`… (%)`), plus `…__other (%)`, `…__other_text`, and `…__none`. *(Still supported; no question in the current survey uses it.)* |
 
 **Skipped questions are blank.** A question that was hidden by a `showIf` rule (see below)
@@ -201,10 +200,10 @@ district, district__other_text,
 contact_continuation, next_contact_info,
 students_impacted,
 budget_allocation__food (%), budget_allocation__hygiene (%), budget_allocation__clothing (%),
-nonperishables__… (rank) ×5, nonperishables__other (rank), nonperishables__other_text, nonperishables__none,
+nonperishables__… ×5, nonperishables__other, nonperishables__other_text, nonperishables__none,
 popchips,
-hygiene__… (rank) ×7, hygiene__other (rank), hygiene__other_text, hygiene__none,
-clothing__… (rank) ×9, clothing__other (rank), clothing__other_text, clothing__none,
+hygiene__… ×7, hygiene__other, hygiene__other_text, hygiene__none,
+clothing__… ×9, clothing__other, clothing__other_text, clothing__none,
 sizes__… ×8, sizes__other, sizes__other_text,
 missing_items, testimonial_permission, delivery_feedback, comments,
 started_at, completed_at, user_agent
@@ -223,11 +222,11 @@ appear only if the respondent put money into that budget category.
 | 2 | `contact_continuation` | radio (+ follow-up `next_contact_info`) | yes | always |
 | 3 | `students_impacted` | text | yes | always |
 | 4 | `budget_allocation` | **allocate** — Food / Hygiene / Clothing, must total 100% | yes | always |
-| 5 | `nonperishables` | select-rank (top 3) | yes | Food > 0% |
+| 5 | `nonperishables` | multi-select (up to 3) | yes | Food > 0% |
 | 6 | `popchips` | radio (Yes / No) | yes | Food > 0% |
-| 7 | `hygiene` | select-rank (top 3) | yes | Hygiene > 0% |
-| 8 | `clothing` | select-rank (top 3) | yes | Clothing > 0% |
-| 9 | `sizes` | multi-select | no | Clothing > 0% |
+| 7 | `hygiene` | multi-select (up to 3) | yes | Hygiene > 0% |
+| 8 | `clothing` | multi-select (up to 3) | yes | Clothing > 0% |
+| 9 | `sizes` | multi-select (no cap) | no | Clothing > 0% |
 | 10 | `missing_items` | textarea | no | always |
 | 11 | `testimonial_permission` | radio | yes | always |
 | 12 | `delivery_feedback` | textarea | no | always |
@@ -235,7 +234,11 @@ appear only if the respondent put money into that budget category.
 
 `district` now includes **YMCA** alongside the nine school districts. Popchips is no
 longer one of the `nonperishables` options — it has its own yes/no question (6) so it can
-be tracked separately from the top-3 picks.
+be tracked separately from the picks.
+
+Questions 5, 7 and 8 ask for **up to 3 items, unordered**. They used to add a second
+screen for dragging those picks into rank order; that screen was dropped in September 2026
+to keep the survey short on a phone, so each is now a single "tick up to 3" screen.
 
 ---
 
@@ -250,8 +253,8 @@ GitHub, or hit **Manual Deploy**).
 - **Add or remove an option** — add/remove an entry in that question's `options` array.
   Each needs a unique `id` (lowercase, underscores) and a `label`.
 - **Make something optional/required** — flip `"required": true` / `false`.
-- **Change how many items can be picked** — `maxSelect` on a `select-weight` or
-  `select-rank` question (leave it off for `multi-select`: no cap).
+- **Change how many items can be picked** — `maxSelect` on any multi-choice question
+  (leave it off for no cap).
 
 Keep `id` values stable if you can: they become the CSV column names, so renaming one
 makes this year's export not line up with last year's.
@@ -259,10 +262,15 @@ makes this year's export not line up with last year's.
 Question types available: `text`, `textarea`, `radio`, `select`, `multi-select`,
 `allocate`, `select-rank`, `select-weight`.
 
+`multi-select` is the plain "tick what applies" question: an optional `maxSelect` cap, an
+optional inline "Other" box (`allowOther`), and an optional exclusive `noneOption` that
+clears everything else when chosen.
+
 `select-rank` and `select-weight` are **two-screen** questions: the respondent picks their
 items on one screen, then drags them into order (or weights them to 100%) on the next.
 Picking the exclusive "none" option skips the second screen. Their prompts are
-`selectPrompt` plus `rankPrompt` / `weightPrompt`.
+`selectPrompt` plus `rankPrompt` / `weightPrompt`. Neither is used by the current survey —
+the code stays in place in case ranking or weighting is wanted again.
 
 `allocate` is the budget-split question. Unlike the others it has **no `options` and no
 selecting** — it has a fixed `categories` array, and the respondent moves percentages

@@ -5,7 +5,8 @@
  *   text / textarea / radio  -> "string"          (radio = option id)
  *   radio follow-up          -> stored under the follow-up's own question id
  *   select                   -> { id: "bbchs" } | { id: "other", other: "…" }
- *   multi-select             -> { selected: ["adult_m", "other"], other?: "…" }
+ *   multi-select             -> { selected: ["adult_m", "other"], other?: "…",
+ *                                 none?: true }
  *   select-weight            -> { selected: ["a","b"], other?: "…",
  *                                 none?: true, weights?: { a: 60, b: 40 } }
  *   select-rank              -> { selected: ["a","b"], other?: "…",
@@ -154,6 +155,12 @@ export function buildAnswers(questions, answers) {
 
     if (q.type === 'multi-select') {
       const v = selectionValue(value)
+      // Exclusive "none": the server expects the none id in `selected`
+      // and nothing else.
+      if (v.none) {
+        push(q.id, { selected: [q.noneOption?.id || 'none'] })
+        return
+      }
       if (v.selected.length === 0) return
       const payload = { selected: [...v.selected] }
       if (v.selected.includes('other') && v.other.trim()) payload.other = v.other.trim()

@@ -1,7 +1,7 @@
 /* Bump on every change to the step model or answer shapes: a session saved by
    an older build must never resume into a screen that no longer means the same
-   thing. v3 = conditional questions + the budget allocation screen. */
-const KEY = 'lk-care-closet-survey-v3'
+   thing. v4 = the three item questions are select-only (no ranking screen). */
+const KEY = 'lk-care-closet-survey-v4'
 
 function available() {
   try {
@@ -18,7 +18,11 @@ const ok = typeof window !== 'undefined' && available()
 
 /* Sessions from older step models can't be migrated safely — clear them out
    rather than leaving dead keys behind. */
-const LEGACY_KEYS = ['lk-care-closet-survey', 'lk-care-closet-survey-v2']
+const LEGACY_KEYS = [
+  'lk-care-closet-survey',
+  'lk-care-closet-survey-v2',
+  'lk-care-closet-survey-v3'
+]
 if (ok) {
   LEGACY_KEYS.forEach((key) => {
     try {

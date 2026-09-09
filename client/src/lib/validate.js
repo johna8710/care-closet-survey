@@ -67,11 +67,16 @@ export function validateQuestion(question, answers) {
 
     case 'multi-select': {
       const v = selectionValue(value)
+      // The exclusive "None" is a real answer, not an empty one.
+      if (v.none) return null
       if (v.selected.length === 0) {
-        return question.required ? 'Please choose at least one option to continue.' : null
+        if (!question.required) return null
+        return question.noneOption
+          ? `Please choose at least one — or pick “${question.noneOption.label}”.`
+          : 'Please choose at least one option to continue.'
       }
       if (v.selected.includes('other') && !v.other.trim()) {
-        return 'Add the other size in the box, and we can keep going.'
+        return 'Just fill in the “Other” box, and we can keep going.'
       }
       return null
     }
@@ -106,7 +111,10 @@ export function isAnswered(step, answers) {
     return v.none || v.selected.length > 0
   }
   if (question.type === 'allocate') return allocateTotal(value, question.categories || []) > 0
-  if (question.type === 'multi-select') return selectionValue(value).selected.length > 0
+  if (question.type === 'multi-select') {
+    const v = selectionValue(value)
+    return v.none || v.selected.length > 0
+  }
   if (question.type === 'select') return Boolean(selectValue(value).id)
   if (typeof value === 'string') return value.trim().length > 0
   return Boolean(value)

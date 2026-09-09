@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Let's Ketchup — Care Closet End-of-Year Survey (frontend)",
+  "description": "Let's Ketchup — Care Closet Partner Survey (frontend)",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
