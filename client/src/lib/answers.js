@@ -6,7 +6,8 @@
  *   radio follow-up          -> stored under the follow-up's own question id
  *   select                   -> { id: "bbchs" } | { id: "other", other: "…" }
  *   multi-select             -> { selected: ["adult_m", "other"], other?: "…",
- *                                 none?: true }
+ *                                 none?: true,
+ *                                 details?: { tshirts: ["youth_m", "adult_s"] } }
  *   select-weight            -> { selected: ["a","b"], other?: "…",
  *                                 none?: true, weights?: { a: 60, b: 40 } }
  *   select-rank              -> { selected: ["a","b"], other?: "…",
@@ -18,13 +19,17 @@
  * a permutation of `selected`. select-weight / select-rank drop their second
  * half when the exclusive "none" option is chosen.
  *
+ * `details` holds the per-option follow-ups (clothing sizes, deodorant
+ * male/female): one entry per *selected* option that declares a `detail` scale,
+ * each a list of ids from that scale. Deselecting an option drops its entry.
+ *
  * Questions hidden by a `showIf` rule are left out of the POST entirely, even
  * when they were answered earlier — see buildAnswers().
  */
 
 import { visibleQuestions } from './visibility.js'
 
-export const emptySelection = () => ({ selected: [], other: '', none: false })
+export const emptySelection = () => ({ selected: [], other: '', none: false, details: {} })
 
 /** The half every multi-choice question shares: what was ticked. */
 export function selectionValue(value) {
@@ -32,11 +37,37 @@ export function selectionValue(value) {
   return {
     selected: Array.isArray(value.selected) ? value.selected : [],
     other: typeof value.other === 'string' ? value.other : '',
-    none: value.none === true
+    none: value.none === true,
+    details: value.details && typeof value.details === 'object' ? value.details : {}
   }
 }
 
-export const emptyWeightValue = () => ({ selected: [], other: '', none: false, weights: {} })
+/** The detail scale a given option opens, or null when it has none. */
+export function detailScale(question, optionId) {
+  const opt = (question.options || []).find((o) => o.id === optionId)
+  if (!opt || !opt.detail) return null
+  const scale = (question.detailScales || {})[opt.detail]
+  return scale && Array.isArray(scale.options) ? scale : null
+}
+
+/** Ticked detail ids for one option, filtered to the ones its scale still offers. */
+export function detailValue(question, value, optionId) {
+  const scale = detailScale(question, optionId)
+  if (!scale) return []
+  const stored = selectionValue(value).details[optionId]
+  if (!Array.isArray(stored)) return []
+  const known = new Set(scale.options.map((o) => o.id))
+  return stored.filter((id) => known.has(id))
+}
+
+/** Selected options that still owe us a detail answer. */
+export function missingDetails(question, value) {
+  const v = selectionValue(value)
+  if (v.none) return []
+  return v.selected.filter((id) => detailScale(question, id) && detailValue(question, value, id).length === 0)
+}
+
+export const emptyWeightValue = () => ({ ...emptySelection(), weights: {} })
 
 export function weightValue(value) {
   const base = selectionValue(value)
@@ -164,6 +195,14 @@ export function buildAnswers(questions, answers) {
       if (v.selected.length === 0) return
       const payload = { selected: [...v.selected] }
       if (v.selected.includes('other') && v.other.trim()) payload.other = v.other.trim()
+      // Per-option details, for the selected options only: an option that was
+      // ticked, answered, then unticked must not leave its sizes behind.
+      const details = {}
+      v.selected.forEach((id) => {
+        const picked = detailValue(q, value, id)
+        if (picked.length) details[id] = picked
+      })
+      if (Object.keys(details).length) payload.details = details
       push(q.id, payload)
       return
     }

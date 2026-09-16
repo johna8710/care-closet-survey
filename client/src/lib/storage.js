@@ -1,7 +1,10 @@
 /* Bump on every change to the step model or answer shapes: a session saved by
    an older build must never resume into a screen that no longer means the same
-   thing. v4 = the three item questions are select-only (no ranking screen). */
-const KEY = 'lk-care-closet-survey-v4'
+   thing. v5 = per-option details (clothing sizes, deodorant male/female), the
+   "None stand out" options are gone, and options were split/renamed — a v4
+   answer could carry an option id the survey no longer offers, which the
+   server would reject on submit. */
+const KEY = 'lk-care-closet-survey-v5'
 
 function available() {
   try {
@@ -21,7 +24,8 @@ const ok = typeof window !== 'undefined' && available()
 const LEGACY_KEYS = [
   'lk-care-closet-survey',
   'lk-care-closet-survey-v2',
-  'lk-care-closet-survey-v3'
+  'lk-care-closet-survey-v3',
+  'lk-care-closet-survey-v4'
 ]
 if (ok) {
   LEGACY_KEYS.forEach((key) => {

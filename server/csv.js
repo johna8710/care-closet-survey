@@ -1,6 +1,6 @@
 // Flattens stored responses into a spreadsheet-friendly CSV, using shared/survey.json
 // for column order. See README ("Column layout") for the exact naming rules.
-import { questions, OTHER_ID, optionLabel } from './survey.js';
+import { questions, OTHER_ID, optionLabel, optionsWithDetail, detailLabel } from './survey.js';
 
 const escapeCell = (value) => {
   if (value === undefined || value === null) return '';
@@ -30,6 +30,23 @@ export function buildColumns() {
       header: `${q.id}__other_text`,
       get: (r) => r.answers?.[q.id]?.other ?? '',
     });
+  };
+
+  // One extra column per option that asks a follow-up ("which sizes?",
+  // "male/female"), holding the chosen labels so the sheet reads as an order
+  // list: clothing__tshirts__detail -> "Youth M; Adult S".
+  const pushDetailColumns = (q) => {
+    for (const opt of optionsWithDetail(q)) {
+      cols.push({
+        key: `${q.id}__${opt.id}__detail`,
+        header: `${q.id}__${opt.id}__detail`,
+        get: (r) => {
+          const picked = r.answers?.[q.id]?.details?.[opt.id];
+          if (!Array.isArray(picked)) return '';
+          return picked.map((id) => detailLabel(q, opt.id, id)).join('; ');
+        },
+      });
+    }
   };
 
   const pushNoneFlag = (q) => {
@@ -75,6 +92,7 @@ export function buildColumns() {
           },
         });
       }
+      pushDetailColumns(q);
       pushOtherText(q);
       pushNoneFlag(q);
     } else if (q.type === 'allocate') {

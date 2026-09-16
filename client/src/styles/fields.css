@@ -178,6 +178,80 @@ fieldset {
   overflow: hidden;
 }
 
+/* Per-option detail chips (clothing sizes, deodorant male/female),
+   revealed inside the card once its item is ticked. */
+
+.detail-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.34s var(--ease);
+}
+
+.detail-slot[data-open='true'] {
+  grid-template-rows: 1fr;
+}
+
+.detail-slot > .detail-pad {
+  overflow: hidden;
+  min-width: 0;
+}
+
+.detail-prompt {
+  display: block;
+  margin: 11px 0 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-bottom: 3px;
+}
+
+.chip {
+  appearance: none;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink-soft);
+  background: var(--surface-raised);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 9px 13px;
+  min-height: 38px;
+  cursor: pointer;
+  transition:
+    background 0.16s var(--ease-soft),
+    border-color 0.16s var(--ease-soft),
+    color 0.16s var(--ease-soft);
+}
+
+.chip:hover {
+  border-color: var(--tomato);
+}
+
+.chip:focus-visible {
+  outline: none;
+  border-color: var(--tomato);
+  box-shadow: var(--shadow-focus);
+}
+
+.chip[data-selected='true'] {
+  background: var(--tomato-btn);
+  border-color: var(--tomato-btn);
+  color: #fff;
+}
+
+.chip[data-selected='true']:hover {
+  background: var(--tomato-btn-hover);
+  border-color: var(--tomato-btn-hover);
+}
+
 /* ---------------------------------------------------------------
    Text inputs
    --------------------------------------------------------------- */
@@ -237,6 +311,13 @@ fieldset {
 
 .followup > .followup-inner {
   overflow: hidden;
+}
+
+.followup-helper {
+  margin: -3px 0 10px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-mute);
 }
 
 .followup .pad {

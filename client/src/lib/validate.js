@@ -1,11 +1,19 @@
 import {
   allocateTotal,
+  missingDetails,
   rankValue,
   selectionValue,
   selectValue,
   weightTotal,
   weightValue
 } from './answers.js'
+
+/** "Socks" / "Socks and T-Shirts" / "Socks, T-Shirts and Hoodies" */
+function labelList(question, ids) {
+  const labels = ids.map((id) => (question.options.find((o) => o.id === id) || {}).label || id)
+  if (labels.length === 1) return labels[0]
+  return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
+}
 
 /** Shared wording for both constant-sum screens (weighting and allocation). */
 function sumMessage(total, noun) {
@@ -77,6 +85,10 @@ export function validateQuestion(question, answers) {
       }
       if (v.selected.includes('other') && !v.other.trim()) {
         return 'Just fill in the “Other” box, and we can keep going.'
+      }
+      const owed = missingDetails(question, value)
+      if (owed.length) {
+        return `Please pick at least one option under ${labelList(question, owed)}.`
       }
       return null
     }

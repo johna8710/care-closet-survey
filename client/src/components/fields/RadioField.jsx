@@ -46,11 +46,12 @@ export default function RadioField({
               <label className="field-label" htmlFor={`fu-${followUp.id}`}>
                 {followUp.title}
               </label>
+              {followUp.helper ? <p className="followup-helper">{followUp.helper}</p> : null}
               <AutoTextarea
                 id={`fu-${followUp.id}`}
                 value={followUpValue || ''}
-                placeholder="Name, email, phone — whatever you have"
-                minHeight={92}
+                placeholder={followUp.placeholder || 'Type your answer'}
+                minHeight={followUp.minHeight || 92}
                 onChange={(e) => onFollowUpChange(e.target.value)}
                 tabIndex={showFollowUp ? 0 : -1}
                 aria-hidden={showFollowUp ? undefined : 'true'}

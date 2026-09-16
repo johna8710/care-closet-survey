@@ -179,20 +179,21 @@ Columns follow the order of questions in `shared/survey.json`.
 | Radio / dropdown | one column with the chosen answer's **label** (e.g. `district` → `Herscher`); plus `district__other_text` when the question allows "Other" |
 | Radio with a follow-up | the follow-up gets its own column (`next_contact_info`) |
 | Budget split (`allocate`) | one column **per category** holding its percentage (`budget_allocation__food (%)`, `budget_allocation__hygiene (%)`, `budget_allocation__clothing (%)`). Always filled in for a completed response — a category that got nothing shows `0`, not a blank |
-| Tick all that apply (`multi-select`) | one column **per option**, `Yes` when ticked and blank when not (`nonperishables__ramen`, `hygiene__soap`, `clothing__socks`, `sizes__adult_m`), plus `…__other`, `…__other_text`, and — where the question offers one — `…__none` (`Yes` when the "none" choice was used) |
+| Tick all that apply (`multi-select`) | one column **per option**, `Yes` when ticked and blank when not (`nonperishables__ramen`, `hygiene__soap`, `clothing__socks`), plus `…__other`, `…__other_text`, and — where the question offers one — `…__none` (`Yes` when the "none" choice was used) |
+| Per-option detail (sizes, male/female) | one extra column per option that asks a follow-up, holding the chosen **labels** joined by `; ` — `clothing__tshirts__detail` → `Youth M (8–10); Adult S`, `hygiene__deodorant__detail` → `Male; Female`. Blank when that option wasn't ticked |
 | Select-3 + ranking (`select-rank`) | one column **per option** holding that option's rank — `1` is the top pick — blank if it wasn't picked, plus `…__other (rank)`, `…__other_text`, and `…__none`. *(Still supported; no question in the current survey uses it.)* |
 | Select-3 + weights (`select-weight`) | one column **per option** holding that option's percentage, blank if it wasn't picked (`… (%)`), plus `…__other (%)`, `…__other_text`, and `…__none`. *(Still supported; no question in the current survey uses it.)* |
 
 **Skipped questions are blank.** A question that was hidden by a `showIf` rule (see below)
 has no answer at all, so every one of its columns is empty — e.g. a district that gave
-Clothing 0% has blanks across all the `clothing__…` and `sizes__…` columns, and one that
+Clothing 0% has blanks across all the `clothing__…` columns, and one that
 gave Food 0% has blanks across `nonperishables__…` and `popchips`.
 
 Every row also carries `response_id`, `submitted_at`, and at the end `started_at`,
 `completed_at`, `user_agent`. Commas, quotes, and line breaks inside answers are escaped
 properly, and the file starts with a byte-order mark so Excel reads accents correctly.
 
-The current survey produces 58 columns, in this order:
+The current survey produces 59 columns, in this order:
 
 ```
 response_id, submitted_at,
@@ -200,12 +201,11 @@ district, district__other_text,
 contact_continuation, next_contact_info,
 students_impacted,
 budget_allocation__food (%), budget_allocation__hygiene (%), budget_allocation__clothing (%),
-nonperishables__… ×5, nonperishables__other, nonperishables__other_text, nonperishables__none,
+nonperishables__… ×5, nonperishables__other, nonperishables__other_text,
 popchips,
-hygiene__… ×7, hygiene__other, hygiene__other_text, hygiene__none,
-clothing__… ×9, clothing__other, clothing__other_text, clothing__none,
-sizes__… ×8, sizes__other, sizes__other_text,
-missing_items, testimonial_permission, delivery_feedback, comments,
+hygiene__… ×8, hygiene__other, hygiene__deodorant__detail, hygiene__other_text,
+clothing__… ×10, clothing__other, clothing__<item>__detail ×10, clothing__other_text,
+missing_items, testimonial_permission, testimonial, delivery_feedback, comments,
 started_at, completed_at, user_agent
 ```
 
@@ -224,13 +224,12 @@ appear only if the respondent put money into that budget category.
 | 4 | `budget_allocation` | **allocate** — Food / Hygiene / Clothing, must total 100% | yes | always |
 | 5 | `nonperishables` | multi-select (up to 3) | yes | Food > 0% |
 | 6 | `popchips` | radio (Yes / No) | yes | Food > 0% |
-| 7 | `hygiene` | multi-select (up to 3) | yes | Hygiene > 0% |
-| 8 | `clothing` | multi-select (up to 3) | yes | Clothing > 0% |
-| 9 | `sizes` | multi-select (no cap) | no | Clothing > 0% |
-| 10 | `missing_items` | textarea | no | always |
-| 11 | `testimonial_permission` | radio | yes | always |
-| 12 | `delivery_feedback` | textarea | no | always |
-| 13 | `comments` | textarea | no | always |
+| 7 | `hygiene` | multi-select (up to 4; Deodorant asks male/female) | yes | Hygiene > 0% |
+| 8 | `clothing` | multi-select (up to 4; every item asks its sizes) | yes | Clothing > 0% |
+| 9 | `missing_items` | textarea | no | always |
+| 10 | `testimonial_permission` | radio (+ follow-up `testimonial`) | yes | always |
+| 11 | `delivery_feedback` | textarea | no | always |
+| 12 | `comments` | textarea | no | always |
 
 `district` now includes **YMCA** alongside the nine school districts. Popchips is no
 longer one of the `nonperishables` options — it has its own yes/no question (6) so it can
@@ -263,8 +262,43 @@ Question types available: `text`, `textarea`, `radio`, `select`, `multi-select`,
 `allocate`, `select-rank`, `select-weight`.
 
 `multi-select` is the plain "tick what applies" question: an optional `maxSelect` cap, an
-optional inline "Other" box (`allowOther`), and an optional exclusive `noneOption` that
+optional inline "Other" box (`allowOther`), optional per-option details (below), and an
+optional exclusive `noneOption` that
 clears everything else when chosen.
+
+### Per-option details (clothing sizes, deodorant male/female)
+
+A `multi-select` option can ask a follow-up of its own, which unfolds inside the option's
+card the moment it is ticked and folds away again when it is unticked. The scales live on
+the question, so several options can share one; each option names the scale it opens:
+
+```json
+{
+  "id": "clothing",
+  "type": "multi-select",
+  "detailScales": {
+    "standard": {
+      "prompt": "Which sizes are needed?",
+      "options": [
+        { "id": "youth_m", "label": "Youth M (8–10)" },
+        { "id": "adult_s", "label": "Adult S" }
+      ]
+    }
+  },
+  "options": [
+    { "id": "tshirts", "label": "T-Shirts", "detail": "standard" },
+    { "id": "socks", "label": "Socks", "detail": "socks" }
+  ]
+}
+```
+
+Details are **multi-select** — a district needing Youth M *and* Adult S says so — and are
+**required** once the option is ticked: an item with no size is not usable for ordering,
+which is the whole reason for asking. Give long scales a "Not sure / Variety of sizes
+needed" escape hatch so that requirement is never a dead end.
+
+They land in the answer as `details`, keyed by option id, and in the CSV as one
+`<question>__<option>__detail` column per option (see "Column layout").
 
 `select-rank` and `select-weight` are **two-screen** questions: the respondent picks their
 items on one screen, then drags them into order (or weights them to 100%) on the next.
@@ -342,7 +376,7 @@ Answer shapes (the server is lenient about shape, strict about the rules):
 | `text`, `textarea` | `"some text"` | trimmed string |
 | `radio`, `select` | `"herscher"` or `{ "value": "other", "other": "Kankakee Valley" }` | `{ "value": "…", "other"?: "…" }` |
 | radio follow-up | top-level `{ "next_contact_info": "…" }`, or nested on the parent as `{ "value": "no", "followUp": "…" }` | top-level string under the follow-up's id |
-| `multi-select` | `{ "selected": ["adult_m","other"], "other": "Adult 3XL" }` | same, normalised |
+| `multi-select` | `{ "selected": ["tshirts","other"], "other": "Rain coats, youth L", "details": { "tshirts": ["youth_m"] } }` | same, normalised |
 | `allocate` | `{ "weights": { "food": 40, "hygiene": 40, "clothing": 20 } }` (a bare `{ "food": 40, … }` map and numeric strings are also accepted) | `{ "weights": { "food": 40, "hygiene": 40, "clothing": 20 } }` |
 | `select-rank` | `{ "selected": ["granola_bars","ramen"], "ranking": ["ramen","granola_bars"] }` | same, normalised (`ranking[0]` is the top pick) |
 | `select-weight` | `{ "selected": ["granola_bars","ramen","other"], "other": "Pop-Tarts", "weights": { "granola_bars": 50, "ramen": 30, "other": 20 } }` | same, normalised |
@@ -362,7 +396,9 @@ Rules enforced (a failure returns `400` with a plain-English `error` message):
   (every pick ordered exactly once)
 - `select-weight`: same selection rules; `weights` must cover exactly the selected items
   with whole numbers ≥ 0 that total **exactly 100**
-- `multi-select`: any number of known ids (no cap unless `maxSelect` is set)
+- `multi-select`: any number of known ids (no cap unless `maxSelect` is set); any selected
+  option that declares a `detail` scale must carry at least one id from that scale, and
+  details for an unselected option are rejected
 
 **Conditional questions.** A question with a `showIf` block is only asked when the
 condition holds — currently `{ "questionId": "budget_allocation", "categoryAboveZero":

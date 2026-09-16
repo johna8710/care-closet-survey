@@ -12,6 +12,8 @@ import {
   optionIds,
   categoryIds,
   categoryLabel,
+  detailScale,
+  optionLabel,
 } from './survey.js';
 
 const isPlainObject = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -137,8 +139,48 @@ function validateSelection(q, raw, { shapeHint }) {
 }
 
 /**
+ * Per-option details: the sizes (or male/female) chosen for each selected option
+ * that declares a detail scale. An option that opens a scale must carry at least
+ * one id from it — a ticked item with no size is not usable for ordering, which
+ * is the whole point of asking.
+ *
+ * Canonical shape: { tshirts: ["youth_m", "adult_s"], ... }
+ */
+function validateDetails(q, raw, selected) {
+  const rawDetails = isPlainObject(raw.details) ? raw.details : {};
+  for (const id of Object.keys(rawDetails)) {
+    if (!selected.includes(id)) {
+      fail(`"${q.title}": got details for unselected option "${id}".`);
+    }
+  }
+
+  const details = {};
+  for (const id of selected) {
+    const scale = detailScale(q, id);
+    if (!scale) continue;
+    const label = optionLabel(q, id);
+    const value = rawDetails[id];
+    let picked = Array.isArray(value) ? value.slice() : typeof value === 'string' ? [value] : [];
+    if (picked.some((s) => typeof s !== 'string')) {
+      fail(`"${q.title}": details for "${label}" must be a list of choice ids.`);
+    }
+    picked = picked.map((s) => s.trim()).filter((s) => s !== '');
+    if (new Set(picked).size !== picked.length) {
+      fail(`"${q.title}": the same option was chosen twice under "${label}".`);
+    }
+    if (picked.length === 0) fail(`"${q.title}": please answer "${scale.prompt}" for ${label}.`);
+    const known = new Set(scale.options.map((o) => o.id));
+    for (const d of picked) {
+      if (!known.has(d)) fail(`"${q.title}": "${d}" is not a choice under "${label}".`);
+    }
+    details[id] = picked;
+  }
+  return details;
+}
+
+/**
  * Plain "tick all that apply" question.
- * Canonical shape: { selected: [id...], other?: "text" }
+ * Canonical shape: { selected: [id...], other?: "text", details?: { id: [id...] } }
  */
 function validateMultiSelect(q, raw) {
   if (raw === undefined || raw === null) {
@@ -147,7 +189,13 @@ function validateMultiSelect(q, raw) {
   }
   const base = validateSelection(q, raw, { shapeHint: '{ selected: [...] }' });
   if (!base) return undefined;
-  return base.none ? base : { selected: base.selected, ...(base.other ? { other: base.other } : {}) };
+  if (base.none) return base;
+  const details = validateDetails(q, raw, base.selected);
+  return {
+    selected: base.selected,
+    ...(base.other ? { other: base.other } : {}),
+    ...(Object.keys(details).length ? { details } : {}),
+  };
 }
 
 /**

@@ -42,15 +42,16 @@
         "id": "next_contact_info",
         "type": "textarea",
         "required": false,
-        "title": "If known, please share the name and contact information of the next contact."
+        "title": "If known, please share the name and contact information of the next contact.",
+        "placeholder": "Name, email, phone — whatever you have"
       }
     },
     {
       "id": "students_impacted",
       "type": "text",
       "required": true,
-      "title": "How many students are estimated to have been impacted by the total donations?",
-      "helper": "A rough estimate is fine — a number, a range, or a short description."
+      "title": "Based on previous donations, how many students could be impacted in the upcoming school year?",
+      "helper": "A rough estimate of the potential impact is fine — a number, a range, or a short description."
     },
     {
       "id": "budget_allocation",
@@ -70,7 +71,7 @@
       "required": true,
       "maxSelect": 3,
       "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "food" },
-      "title": "Which non-perishables are most popular with your students?",
+      "title": "Which non-perishable food items are most needed?",
       "selectPrompt": "Select up to 3.",
       "options": [
         { "id": "granola_bars", "label": "Granola Bars" },
@@ -80,8 +81,7 @@
         { "id": "fruit_snacks", "label": "Fruit Snacks" }
       ],
       "allowOther": true,
-      "otherLabel": "Other (please specify)",
-      "noneOption": { "id": "none", "label": "None stand out as especially popular" }
+      "otherLabel": "Other (please specify)"
     },
     {
       "id": "popchips",
@@ -98,72 +98,102 @@
       "id": "hygiene",
       "type": "multi-select",
       "required": true,
-      "maxSelect": 3,
+      "maxSelect": 4,
       "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "hygiene" },
-      "title": "Which hygiene items are most requested?",
-      "selectPrompt": "Select up to 3.",
+      "title": "Which hygiene items are most needed?",
+      "selectPrompt": "Select up to 4.",
+      "detailScales": {
+        "gender": {
+          "prompt": "Which is needed?",
+          "options": [
+            { "id": "male", "label": "Male" },
+            { "id": "female", "label": "Female" }
+          ]
+        }
+      },
       "options": [
-        { "id": "deodorant", "label": "Deodorant" },
-        { "id": "soap", "label": "Soap" },
+        { "id": "deodorant", "label": "Deodorant", "detail": "gender" },
+        { "id": "soap", "label": "Soap/Bodywash" },
         { "id": "shampoo", "label": "Shampoo" },
         { "id": "hair_care", "label": "Brushes, Combs, Hair Care" },
         { "id": "toothpaste", "label": "Toothpaste" },
+        { "id": "toothbrushes", "label": "Toothbrushes" },
         { "id": "pads_tampons", "label": "Pads/Tampons" },
         { "id": "chapstick", "label": "Chapstick" }
-      ],
-      "allowOther": true,
-      "otherLabel": "Other (please specify)",
-      "noneOption": { "id": "none", "label": "None stand out as especially requested" }
-    },
-    {
-      "id": "clothing",
-      "type": "multi-select",
-      "required": true,
-      "maxSelect": 3,
-      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "clothing" },
-      "title": "Which clothing items are most useful?",
-      "selectPrompt": "Select up to 3.",
-      "options": [
-        { "id": "underwear", "label": "Underwear" },
-        { "id": "socks", "label": "Socks" },
-        { "id": "tshirts", "label": "T-Shirts" },
-        { "id": "long_sleeved", "label": "Long-sleeved Shirts" },
-        { "id": "hoodies", "label": "Hoodies" },
-        { "id": "sweatshirts", "label": "Sweatshirts" },
-        { "id": "sweatpants", "label": "Sweatpants" },
-        { "id": "leggings", "label": "Leggings" },
-        { "id": "hats_gloves", "label": "Hats and Gloves" }
-      ],
-      "allowOther": true,
-      "otherLabel": "Other (please specify)",
-      "noneOption": { "id": "none", "label": "None stand out as especially useful" }
-    },
-    {
-      "id": "sizes",
-      "type": "multi-select",
-      "required": false,
-      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "clothing" },
-      "title": "With the most utilized clothing, what sizes (or size ranges) were most useful?",
-      "selectPrompt": "Select all that apply.",
-      "options": [
-        { "id": "youth_4_6", "label": "Youth 4–6" },
-        { "id": "youth_8_10", "label": "Youth 8–10" },
-        { "id": "youth_12_16", "label": "Youth 12–16" },
-        { "id": "adult_s", "label": "Adult S" },
-        { "id": "adult_m", "label": "Adult M" },
-        { "id": "adult_l", "label": "Adult L" },
-        { "id": "adult_xl", "label": "Adult XL" },
-        { "id": "adult_2xl_plus", "label": "Adult 2XL or larger" }
       ],
       "allowOther": true,
       "otherLabel": "Other (please specify)"
     },
     {
+      "id": "clothing",
+      "type": "multi-select",
+      "required": true,
+      "maxSelect": 4,
+      "showIf": { "questionId": "budget_allocation", "categoryAboveZero": "clothing" },
+      "title": "Which clothing items are most needed?",
+      "helper": "All items are unisex except underwear and leggings. Pick an item and we'll ask which sizes you need — that way what arrives is what your students can actually wear.",
+      "selectPrompt": "Select up to 4.",
+      "detailScales": {
+        "standard": {
+          "prompt": "Which sizes are needed?",
+          "options": [
+            { "id": "prek", "label": "Pre-K" },
+            { "id": "youth_xs", "label": "Youth XS (4–5)" },
+            { "id": "youth_s", "label": "Youth S (6–7)" },
+            { "id": "youth_m", "label": "Youth M (8–10)" },
+            { "id": "youth_l", "label": "Youth L (12–14)" },
+            { "id": "youth_xl", "label": "Youth XL (16–18)" },
+            { "id": "adult_s", "label": "Adult S" },
+            { "id": "adult_m", "label": "Adult M" },
+            { "id": "adult_l", "label": "Adult L" },
+            { "id": "adult_xl", "label": "Adult XL" },
+            { "id": "adult_2xl", "label": "Adult 2XL" },
+            { "id": "adult_3xl_plus", "label": "Adult 3XL+" },
+            { "id": "not_sure", "label": "Not sure / Variety of sizes needed" }
+          ]
+        },
+        "socks": {
+          "prompt": "Which sizes are needed?",
+          "options": [
+            { "id": "little_kid", "label": "Little Kid / Elementary" },
+            { "id": "big_kid", "label": "Big Kid / Youth" },
+            { "id": "adult_sm", "label": "Adult S/M" },
+            { "id": "adult_lxl", "label": "Adult L/XL" },
+            { "id": "not_sure", "label": "Not sure / Variety of sizes needed" }
+          ]
+        },
+        "hats_gloves": {
+          "prompt": "Which sizes are needed?",
+          "options": [
+            { "id": "hats_youth", "label": "Hats — Youth" },
+            { "id": "hats_adult", "label": "Hats — Adult" },
+            { "id": "gloves_kid", "label": "Gloves — Kid" },
+            { "id": "gloves_adult", "label": "Gloves — Adult" }
+          ]
+        }
+      },
+      "options": [
+        { "id": "underwear_boys", "label": "Underwear — Boys'", "detail": "standard" },
+        { "id": "underwear_girls", "label": "Underwear — Girls'", "detail": "standard" },
+        { "id": "socks", "label": "Socks", "detail": "socks" },
+        { "id": "tshirts", "label": "T-Shirts", "detail": "standard" },
+        { "id": "long_sleeved", "label": "Long-sleeved Shirts", "detail": "standard" },
+        { "id": "hoodies", "label": "Hoodies", "detail": "standard" },
+        { "id": "sweatshirts", "label": "Sweatshirts", "detail": "standard" },
+        { "id": "sweatpants", "label": "Sweatpants", "detail": "standard" },
+        { "id": "leggings", "label": "Leggings", "detail": "standard" },
+        { "id": "hats_gloves", "label": "Hats and Gloves", "detail": "hats_gloves" }
+      ],
+      "allowOther": true,
+      "otherLabel": "Other (please specify)",
+      "otherPlaceholder": "Item and size(s) needed"
+    },
+    {
       "id": "missing_items",
       "type": "textarea",
       "required": false,
-      "title": "Are there any items not on the list that would better benefit your school district?",
-      "helper": "We'll do our best to accommodate any requests entered on this page; however, these requests are not guaranteed and will be considered secondary to your selections earlier in the survey."
+      "title": "Are there any additional items, needs, or considerations not included in this survey that would better support your school district?",
+      "helper": "You are welcome to share additional requests, such as other items, allergy-related considerations, or preferred clothing colors. We will take these requests into consideration when possible; however, they are not guaranteed and will be secondary to the selections made earlier in the survey."
     },
     {
       "id": "testimonial_permission",
@@ -175,7 +205,17 @@
         { "id": "yes_both", "label": "Yes for both!" },
         { "id": "district_only", "label": "School district without name" },
         { "id": "not_now", "label": "Not at this time" }
-      ]
+      ],
+      "followUp": {
+        "showWhen": ["yes_both", "district_only"],
+        "id": "testimonial",
+        "type": "textarea",
+        "required": false,
+        "title": "Thank you — would you like to write your testimonial right here?",
+        "helper": "Since you're happy for us to share it, here's the box to write it in. A sentence or two about what the Care Closet has meant for your students is plenty, and you're welcome to write more. You can also leave this blank and send one along later.",
+        "placeholder": "What the Care Closet has meant for your students…",
+        "minHeight": 148
+      }
     },
     {
       "id": "delivery_feedback",

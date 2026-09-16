@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import ChoiceCard from './ChoiceCard.jsx'
-import { selectionValue } from '../../lib/answers.js'
+import { detailScale, detailValue, selectionValue } from '../../lib/answers.js'
 
 /**
  * The "tick what applies" screen shared by multi-select, select-weight and
  * select-rank questions: optional cap, optional exclusive "None", optional
- * inline "Other" text.
+ * inline "Other" text, and optional per-option detail chips (clothing sizes,
+ * deodorant male/female) that unfold under an option once it is ticked.
  *
  * Anything else already on the answer (weights, ranking) is passed straight
  * through — the second-half screens own those.
@@ -15,6 +16,7 @@ export default function ChoiceListField({ question, value, onChange }) {
   const max = question.maxSelect || null
   const noneOption = question.noneOption
   const otherLabel = question.otherLabel || 'Other (please specify)'
+  const otherPlaceholder = question.otherPlaceholder || 'Type the item'
 
   const [notice, setNotice] = useState(null)
   const [blocked, setBlocked] = useState(false)
@@ -52,8 +54,10 @@ export default function ChoiceListField({ question, value, onChange }) {
   const toggle = (id) => {
     if (v.selected.includes(id)) {
       const selected = v.selected.filter((x) => x !== id)
+      const details = { ...v.details }
+      delete details[id]
       setNotice(null)
-      commit({ selected, none: false, ...(id === 'other' ? { other: '' } : {}) })
+      commit({ selected, details, none: false, ...(id === 'other' ? { other: '' } : {}) })
       return
     }
     if (max && v.selected.length >= max) {
@@ -68,9 +72,17 @@ export default function ChoiceListField({ question, value, onChange }) {
     setNotice(null)
     commit(
       v.none
-        ? { selected: [], other: '', none: false }
-        : { selected: [], other: '', none: true, weights: {}, ranking: [] }
+        ? { selected: [], other: '', details: {}, none: false }
+        : { selected: [], other: '', details: {}, none: true, weights: {}, ranking: [] }
     )
+  }
+
+  const toggleDetail = (optionId, detailId) => {
+    const current = detailValue(question, value, optionId)
+    const next = current.includes(detailId)
+      ? current.filter((x) => x !== detailId)
+      : [...current, detailId]
+    commit({ details: { ...v.details, [optionId]: next } })
   }
 
   const noneSelected = v.none
@@ -84,19 +96,53 @@ export default function ChoiceListField({ question, value, onChange }) {
       </legend>
 
       <div className="choices" data-blocked={blocked ? 'true' : 'false'}>
-        {question.options.map((opt) => (
-          <ChoiceCard
-            key={opt.id}
-            shape="check"
-            name={`${question.id}-${opt.id}`}
-            value={opt.id}
-            checked={v.selected.includes(opt.id)}
-            disabled={noneSelected}
-            label={opt.label}
-            sublabel={opt.sublabel}
-            onChange={() => toggle(opt.id)}
-          />
-        ))}
+        {question.options.map((opt) => {
+          const scale = detailScale(question, opt.id)
+          const open = v.selected.includes(opt.id)
+          const picked = detailValue(question, value, opt.id)
+          return (
+            <ChoiceCard
+              key={opt.id}
+              shape="check"
+              name={`${question.id}-${opt.id}`}
+              value={opt.id}
+              checked={open}
+              disabled={noneSelected}
+              label={opt.label}
+              sublabel={opt.sublabel}
+              onChange={() => toggle(opt.id)}
+            >
+              {scale ? (
+                // The chips live inside the card's <label>, so a tap on one must
+                // not bubble up and untick the item it belongs to.
+                <span
+                  className="detail-slot"
+                  data-open={open ? 'true' : 'false'}
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <span className="detail-pad">
+                    <span className="detail-prompt">{scale.prompt}</span>
+                    <span className="chips">
+                      {scale.options.map((d) => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          className="chip"
+                          data-selected={picked.includes(d.id) ? 'true' : 'false'}
+                          aria-pressed={picked.includes(d.id)}
+                          tabIndex={open ? 0 : -1}
+                          onClick={() => toggleDetail(opt.id, d.id)}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </span>
+                  </span>
+                </span>
+              ) : null}
+            </ChoiceCard>
+          )
+        })}
 
         {question.allowOther ? (
           <ChoiceCard
@@ -115,7 +161,7 @@ export default function ChoiceListField({ question, value, onChange }) {
                   type="text"
                   className="input"
                   value={v.other}
-                  placeholder="Type the item"
+                  placeholder={otherPlaceholder}
                   aria-label={otherLabel}
                   onChange={(e) => commit({ other: e.target.value })}
                 />
