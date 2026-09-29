@@ -11,6 +11,8 @@ import { survey } from './survey.js';
 import { validateSubmission, Invalid } from './validate.js';
 import { initStorage } from './storage.js';
 import { responsesToCsv } from './csv.js';
+import { renderReport } from './report.js';
+import { queueNotification, notifyNewResponse, notifyStatus, notifyConfig } from './notify.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = path.resolve(__dirname, '..', 'client', 'dist');
@@ -70,6 +72,7 @@ app.post('/api/responses', rateLimit, async (req, res, next) => {
     const store = await initStorage();
     const { id } = await store.insertResponse(clean);
     res.status(201).json({ id });
+    queueNotification(store, id); // email the team; never blocks or fails the respondent
   } catch (err) {
     if (err instanceof Invalid) return res.status(400).json({ error: err.message });
     next(err);
@@ -96,6 +99,36 @@ app.get('/api/admin/responses.csv', requireAdmin, async (_req, res, next) => {
     res.send('﻿' + csv); // BOM so Excel reads UTF-8 correctly
   } catch (err) {
     next(err);
+  }
+});
+
+// The results report, rendered live from the database (same page the email attaches).
+app.get('/api/admin/report.html', requireAdmin, async (_req, res, next) => {
+  try {
+    const store = await initStorage();
+    const html = renderReport(await store.listResponses(), { since: notifyConfig().since });
+    res.type('text/html; charset=utf-8').send(html);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Notification plumbing: GET shows whether mail is configured (never the secret);
+// POST re-sends the notification for the latest response, to NOTIFY_TO or ?to=<address>.
+app.get('/api/admin/notify', requireAdmin, (_req, res) => res.json(notifyStatus()));
+
+app.post('/api/admin/notify', requireAdmin, async (req, res) => {
+  try {
+    const store = await initStorage();
+    const since = notifyConfig().since;
+    const latest = [...(await store.listResponses())].reverse().find((r) => r.submittedAt >= since);
+    if (!latest) return res.status(404).json({ error: `No responses since SURVEY_SENT_AT (${since}) to notify about.` });
+    const to = typeof req.query.to === 'string' && req.query.to.includes('@') ? req.query.to : undefined;
+    const result = await notifyNewResponse(store, latest.id, { to });
+    res.status(result.skipped ? 409 : 200).json({ ok: !result.skipped, responseId: latest.id, ...result });
+  } catch (err) {
+    console.error('[notify] test send failed:', err);
+    res.status(502).json({ ok: false, error: err.message });
   }
 });
 

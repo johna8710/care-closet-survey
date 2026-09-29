@@ -147,6 +147,53 @@ wasn't set — the app quietly fell back to a temporary SQLite file.
 
 ---
 
+## Email notifications
+
+When the four mail variables below are set, every new response emails the team a
+summary of that submission plus the updated **results report** as an HTML attachment,
+sent **from** a Microsoft 365 mailbox through Microsoft Graph. A copy lands in that
+mailbox's Sent Items. Nothing about the respondent's experience changes: the email is
+sent after the response is saved and a failure is only logged.
+
+| Variable | Meaning |
+| --- | --- |
+| `MS_TENANT_ID` | Directory (tenant) ID of the Microsoft 365 tenant (Entra admin center, the app registration's Overview page) |
+| `MS_CLIENT_ID` | Application (client) ID of the app registration |
+| `MS_CLIENT_SECRET` | A client secret's **Value** (shown once when created; not its Secret ID) |
+| `MAIL_FROM` | Mailbox to send from, e.g. `John_Adams@LetsKetchup.org` |
+| `NOTIFY_TO` | Comma-separated recipients. Defaults to `MAIL_FROM` |
+| `NOTIFY_DRY_RUN` | `1` logs the message instead of sending it (useful locally) |
+| `SURVEY_SENT_AT` | `YYYY-MM-DD`; rows before this are test submissions and are left out of the report (default `2026-09-23`) |
+
+**One-time setup in Entra** (needs an admin of the tenant): App registrations → New
+registration (single tenant) → API permissions → Add → Microsoft Graph → *Application*
+permissions → `Mail.Send` → **Grant admin consent** → Certificates & secrets → New client
+secret (copy the Value immediately). Application `Mail.Send` can send as any mailbox in
+the tenant, so it is worth scoping it to the one mailbox with an Exchange application
+access policy:
+
+```powershell
+New-ApplicationAccessPolicy -AppId <client id> -PolicyScopeGroupId John_Adams@LetsKetchup.org -AccessRight RestrictAccess -Description "Survey notifier"
+```
+
+Client secrets expire (24 months at most); when one does, create a new secret and
+update `MS_CLIENT_SECRET`.
+
+**Checking it works** (all need `ADMIN_KEY`):
+
+```
+GET  /api/admin/notify?key=YOUR_KEY          -> is mail configured, who it goes to (never shows the secret)
+POST /api/admin/notify?key=YOUR_KEY          -> re-send the notification for the latest response to NOTIFY_TO
+POST /api/admin/notify?key=YOUR_KEY&to=you@x -> same, to one address only (a test that spares the team)
+GET  /api/admin/report.html?key=YOUR_KEY     -> the live results report, the same page the email attaches
+```
+
+The report is rendered by `server/report.js` from the stored responses and
+`shared/survey.json`; its prose is computed from the numbers, so it stays correct as
+responses arrive. Notifications are wired in `server/notify.js` and mail is sent by
+`server/graph-mail.js` (no extra dependency; Node's built-in `fetch`). On Vercel the
+send may be cut short when the function ends, so use Render for notifications.
+
 ## Viewing and exporting results
 
 Two endpoints, both requiring your `ADMIN_KEY`. Replace `YOUR_KEY` and the domain:

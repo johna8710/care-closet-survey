@@ -14,6 +14,17 @@ services:
         value: /var/data
       - key: ADMIN_KEY
         sync: false # set this yourself in the Render dashboard — it is the results password
+      # Email notifications (see README "Email notifications"); all set in the dashboard.
+      - key: MS_TENANT_ID
+        sync: false
+      - key: MS_CLIENT_ID
+        sync: false
+      - key: MS_CLIENT_SECRET
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: NOTIFY_TO
+        sync: false
     disk:
       name: survey-data
       mountPath: /var/data

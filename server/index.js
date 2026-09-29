@@ -14,12 +14,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  * (they have no .env file anyway).
  */
 function loadDotEnv() {
-  const file = path.resolve(__dirname, '..', '.env');
+  // .env.local (never committed) wins over .env; real environment variables win over both.
+  for (const name of ['.env.local', '.env']) loadDotEnvFile(path.resolve(__dirname, '..', name));
+}
+
+function loadDotEnvFile(file) {
   let text;
   try {
     text = fs.readFileSync(file, 'utf8');
   } catch {
-    return; // no .env — perfectly normal
+    return; // no file — perfectly normal
   }
   for (const line of text.split(/\r?\n/)) {
     const trimmed = line.trim();
